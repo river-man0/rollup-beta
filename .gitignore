@@ -1,0 +1,18 @@
+# Ignore big folders
+data/
+output/
+__pycache__/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Common ignores
+*.pyc
+*.pyo
+*.log
+.DS_Store
+.vscode/
+*.code-workspace
+Thumbs.db
