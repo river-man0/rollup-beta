@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dad at IRONMAN Canada-Ottawa · Bib 1597</title>
+<meta name="description" content="Race-day dashboard for tracking Dad (Bib 1597) at IRONMAN Canada-Ottawa, August 2, 2026." />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #eef0f4;
+    --text: #14171c;
+    --text-dim: #5b6270;
+    --border: #dfe3e9;
+    --accent: #d1004b;
+    --accent-2: #0b6e4f;
+    --accent-ink: #ffffff;
+    --swim: #0b6e4f;
+    --bike: #1f5fbf;
+    --run: #d1004b;
+    --warn: #b8860b;
+    --shadow: 0 1px 2px rgba(16,20,26,0.06), 0 8px 24px rgba(16,20,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1013;
+      --surface: #171a1f;
+      --surface-2: #1e222a;
+      --text: #eef0f3;
+      --text-dim: #9aa2b1;
+      --border: #2a2f38;
+      --accent: #ff4f7e;
+      --accent-2: #35c98a;
+      --accent-ink: #14171c;
+      --swim: #35c98a;
+      --bike: #6ea8ff;
+      --run: #ff4f7e;
+      --warn: #e0b23c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+    padding-bottom: 3rem;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 0; }
+  header.top {
+    padding: 1.5rem 0 1rem;
+    text-align: center;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0.3rem 0 0.2rem;
+    letter-spacing: -0.01em;
+  }
+  .bib {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    margin-top: 0.3rem;
+  }
+  .subhead {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin: 0 0 0.75rem;
+  }
+
+  /* Countdown */
+  .countdown-card { text-align: center; }
+  .countdown {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin: 0.4rem 0 0.6rem;
+  }
+  .cd-unit {
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 0.6rem 0.75rem;
+    min-width: 4.2rem;
+  }
+  .cd-num {
+    font-size: 1.7rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .cd-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
+  }
+  .countdown-status {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 0.2rem;
+  }
+  .start-time-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+  }
+  .start-time-row input[type="time"], .start-time-row input[type="date"] {
+    font: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem;
+  }
+  .note {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+  }
+
+  /* Tracker buttons */
+  .track-buttons { display: grid; gap: 0.6rem; }
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--accent-ink);
+    background: var(--accent);
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .btn small {
+    display: block;
+    font-weight: 500;
+    opacity: 0.85;
+    font-size: 0.75rem;
+    margin-top: 0.1rem;
+  }
+  .btn.secondary {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn .arrow { font-size: 1.1rem; opacity: 0.8; flex-shrink: 0; }
+  .btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .btn-grid .btn { flex-direction: column; align-items: flex-start; justify-content: center; }
+
+  .howto {
+    margin: 0.9rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .howto b { color: var(--text); }
+
+  /* Course */
+  .leg {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    gap: 0.7rem;
+    align-items: start;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .leg:last-child { border-bottom: none; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    margin-top: 0.4rem;
+  }
+  .leg-name { font-weight: 700; font-size: 0.92rem; }
+  .leg-desc { color: var(--text-dim); font-size: 0.82rem; margin-top: 0.1rem; }
+  .leg-dist { font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+
+  /* Splits calculator */
+  .split-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+  }
+  .field label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 0.25rem;
+  }
+  .field input {
+    width: 100%;
+    font: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+  table.splits {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  table.splits th, table.splits td {
+    text-align: left;
+    padding: 0.45rem 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  table.splits th { color: var(--text-dim); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.splits td.warn-row { color: var(--warn); font-weight: 700; }
+  .pill {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    color: #fff;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    padding: 1.5rem 1rem 0;
+  }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Race Day Dashboard</div>
+    <h1>Tracking Dad 🏊‍♂️🚴‍♂️🏃‍♂️</h1>
+    <span class="bib">BIB #1597</span>
+    <div class="subhead">IRONMAN Canada&ndash;Ottawa &middot; Full Distance &middot; Sunday, August 2, 2026</div>
+  </header>
+
+  <section class="card countdown-card">
+    <h2>Countdown</h2>
+    <div id="countdown-status" class="countdown-status">Loading&hellip;</div>
+    <div class="countdown" id="countdown">
+      <div class="cd-unit"><div class="cd-num" id="cd-d">–</div><div class="cd-label">Days</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-h">–</div><div class="cd-label">Hours</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-m">–</div><div class="cd-label">Min</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-s">–</div><div class="cd-label">Sec</div></div>
+    </div>
+    <div class="start-time-row">
+      <span>Swim start:</span>
+      <input type="date" id="start-date" />
+      <input type="time" id="start-time" />
+      <span id="tz-label"></span>
+    </div>
+    <div class="note">Default is a typical full-IRONMAN 7:00&nbsp;AM start &mdash; adjust it here once you know the confirmed gun time from Dad's athlete guide. Your choice is saved on this device.</div>
+  </section>
+
+  <section class="card">
+    <h2>Follow Him Live</h2>
+    <div class="track-buttons">
+      <a class="btn" target="_blank" rel="noopener" href="https://www.ironman.com/races/im-canada-ottawa">
+        <span>Official Race &amp; Athlete Tracker<br><small>ironman.com &mdash; search Bib 1597 on the Tracker tab</small></span>
+        <span class="arrow">↗</span>
+      </a>
+      <div class="btn-grid">
+        <a class="btn secondary" target="_blank" rel="noopener" href="https://apps.apple.com/app/id1183983404">
+          IRONMAN Tracker
+          <small>iOS app</small>
+        </a>
+        <a class="btn secondary" target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=me.rtrt.app.irma">
+          IRONMAN Tracker
+          <small>Android app</small>
+        </a>
+      </div>
+      <a class="btn secondary" target="_blank" rel="noopener" href="https://ottawatourism.ca/en/see-and-do/ironman">
+        Spectator &amp; Course Guide
+        <span class="arrow">↗</span>
+      </a>
+    </div>
+    <div class="howto">
+      <b>Best way to follow along:</b> install the free official <b>IRONMAN Tracker</b> app (links above), search <b>Bib 1597</b>, and turn on push notifications &mdash; it'll alert you at swim exit, T1, bike splits, T2, and the finish. The web tracker on ironman.com works too but the app is more reliable on race day when cell networks get crowded near the course.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Course</h2>
+    <div class="leg">
+      <div class="dot" style="background: var(--swim)"></div>
+      <div><div class="leg-name">Swim</div><div class="leg-desc">2-loop swim in the Ottawa River, Britannia Beach</div></div>
+      <div class="leg-dist">3.8 km</div>
+    </div>
+    <div class="leg">
+      <div class="dot" style="background: var(--bike)"></div>
+      <div><div class="leg-name">Bike</div><div class="leg-desc">Closed-road loop from Britannia along the river, Gatineau/Hull &amp; the Rideau Canal</div></div>
+      <div class="leg-dist">180 km</div>
+    </div>
+    <div class="leg">
+      <div class="dot" style="background: var(--run)"></div>
+      <div><div class="leg-name">Run</div><div class="leg-desc">Downtown, Dow's Lake &amp; the Experimental Farm, finishing on Parliament Hill</div></div>
+      <div class="leg-dist">42.2 km</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Expected Splits Planner</h2>
+    <div class="split-form">
+      <div class="field"><label for="in-swim">Swim time (h:mm)</label><input id="in-swim" type="text" placeholder="1:15" value="1:15" /></div>
+      <div class="field"><label for="in-t1">T1 (mm:ss)</label><input id="in-t1" type="text" placeholder="8:00" value="8:00" /></div>
+      <div class="field"><label for="in-bike">Bike time (h:mm)</label><input id="in-bike" type="text" placeholder="6:30" value="6:30" /></div>
+      <div class="field"><label for="in-t2">T2 (mm:ss)</label><input id="in-t2" type="text" placeholder="6:00" value="6:00" /></div>
+      <div class="field"><label for="in-run">Run time (h:mm)</label><input id="in-run" type="text" placeholder="4:45" value="4:45" /></div>
+    </div>
+    <table class="splits">
+      <thead><tr><th>Checkpoint</th><th>Clock time</th><th>Elapsed</th><th>Typical cutoff</th></tr></thead>
+      <tbody id="splits-body"></tbody>
+    </table>
+    <div class="note">Enter Dad's realistic goal times to see the estimated clock time at each checkpoint. Cutoffs shown (2:20 swim, ~10:30 bike, 17:00 overall) are typical full-IRONMAN limits &mdash; check his athlete guide for Ottawa's official numbers.</div>
+  </section>
+
+  <footer>
+    Built for race day &middot; Bib 1597 &middot; IRONMAN Canada&ndash;Ottawa, Aug 2, 2026 &middot; Go Dad! 🏁
+  </footer>
+</div>
+
+<script>
+(function () {
+  var LS_KEY = 'im-ottawa-start-2026';
+  var dateEl = document.getElementById('start-date');
+  var timeEl = document.getElementById('start-time');
+  var tzLabel = document.getElementById('tz-label');
+
+  function defaultStart() {
+    var saved = localStorage.getItem(LS_KEY);
+    if (saved) return new Date(saved);
+    return new Date('2026-08-02T07:00:00-04:00');
+  }
+
+  var startDate = defaultStart();
+
+  function fmtDateInput(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function fmtTimeInput(d) {
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  dateEl.value = fmtDateInput(startDate);
+  timeEl.value = fmtTimeInput(startDate);
+  tzLabel.textContent = '(' + Intl.DateTimeFormat().resolvedOptions().timeZone + ')';
+
+  function readStartFromInputs() {
+    var d = dateEl.value, t = timeEl.value;
+    if (!d || !t) return startDate;
+    return new Date(d + 'T' + t + ':00');
+  }
+
+  function persist() {
+    startDate = readStartFromInputs();
+    localStorage.setItem(LS_KEY, startDate.toISOString());
+    renderSplits();
+  }
+  dateEl.addEventListener('change', persist);
+  timeEl.addEventListener('change', persist);
+
+  var elD = document.getElementById('cd-d'),
+      elH = document.getElementById('cd-h'),
+      elM = document.getElementById('cd-m'),
+      elS = document.getElementById('cd-s'),
+      status = document.getElementById('countdown-status');
+
+  function tickCountdown() {
+    var now = new Date();
+    var diff = startDate - now;
+    if (diff <= 0) {
+      var since = -diff;
+      var h = Math.floor(since / 3600000);
+      status.textContent = h < 20 ? 'He’s racing! 🔥' : 'Race underway (or finished — check the tracker!)';
+      var days = Math.floor(since / 86400000);
+      var hrs = Math.floor((since % 86400000) / 3600000);
+      var mins = Math.floor((since % 3600000) / 60000);
+      var secs = Math.floor((since % 60000) / 1000);
+      elD.textContent = days; elH.textContent = hrs; elM.textContent = mins; elS.textContent = secs;
+      document.querySelectorAll('.cd-label')[0].textContent = 'Days In';
+      document.querySelectorAll('.cd-label')[1].textContent = 'Hrs In';
+    } else {
+      status.textContent = 'Until the swim start';
+      var days = Math.floor(diff / 86400000);
+      var hrs = Math.floor((diff % 86400000) / 3600000);
+      var mins = Math.floor((diff % 3600000) / 60000);
+      var secs = Math.floor((diff % 60000) / 1000);
+      elD.textContent = days; elH.textContent = hrs; elM.textContent = mins; elS.textContent = secs;
+    }
+  }
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
+
+  // ---- Splits planner ----
+  function parseHM(str) {
+    if (!str) return 0;
+    var parts = str.split(':').map(Number);
+    if (parts.length === 2) return parts[0] * 3600 + parts[1] * 60;
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return 0;
+  }
+  function parseMS(str) {
+    if (!str) return 0;
+    var parts = str.split(':').map(Number);
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return Number(str) || 0;
+  }
+  function fmtClock(d) {
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  function fmtElapsed(sec) {
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+    return h + 'h ' + String(m).padStart(2, '0') + 'm';
+  }
+
+  var ids = ['in-swim', 'in-t1', 'in-bike', 'in-t2', 'in-run'];
+  ids.forEach(function (id) {
+    document.getElementById(id).addEventListener('input', renderSplits);
+  });
+
+  function renderSplits() {
+    var swim = parseHM(document.getElementById('in-swim').value);
+    var t1 = parseMS(document.getElementById('in-t1').value);
+    var bike = parseHM(document.getElementById('in-bike').value);
+    var t2 = parseMS(document.getElementById('in-t2').value);
+    var run = parseHM(document.getElementById('in-run').value);
+
+    var cutoffs = { swim: 2 * 3600 + 20 * 60, bike: 10.5 * 3600, finish: 17 * 3600 };
+
+    var rows = [
+      { name: 'Swim exit', dur: swim, cutoff: cutoffs.swim, color: 'var(--swim)' },
+      { name: 'T1 done', dur: swim + t1, cutoff: null, color: 'var(--swim)' },
+      { name: 'Bike finish', dur: swim + t1 + bike, cutoff: cutoffs.bike, color: 'var(--bike)' },
+      { name: 'T2 done', dur: swim + t1 + bike + t2, cutoff: null, color: 'var(--bike)' },
+      { name: 'FINISH', dur: swim + t1 + bike + t2 + run, cutoff: cutoffs.finish, color: 'var(--run)' }
+    ];
+
+    var body = document.getElementById('splits-body');
+    body.innerHTML = '';
+    rows.forEach(function (r) {
+      var clock = new Date(startDate.getTime() + r.dur * 1000);
+      var overCutoff = r.cutoff !== null && r.dur > r.cutoff;
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><span class="pill" style="background:' + r.color + '">' + r.name + '</span></td>' +
+        '<td>' + fmtClock(clock) + '</td>' +
+        '<td>' + fmtElapsed(r.dur) + '</td>' +
+        '<td class="' + (overCutoff ? 'warn-row' : '') + '">' + (r.cutoff ? fmtElapsed(r.cutoff) + (overCutoff ? ' ⚠️' : '') : '—') + '</td>';
+      body.appendChild(tr);
+    });
+  }
+  renderSplits();
+})();
+</script>
+</body>
+</html>
