@@ -23,6 +23,7 @@
     --run: #d1004b;
     --warn: #b8860b;
     --shadow: 0 1px 2px rgba(16,20,26,0.06), 0 8px 24px rgba(16,20,26,0.06);
+    --glass: rgba(255,255,255,0.9);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -40,6 +41,7 @@
       --run: #ff4f7e;
       --warn: #e0b23c;
       --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+      --glass: rgba(20,23,28,0.82);
     }
   }
   * { box-sizing: border-box; }
@@ -52,21 +54,12 @@
     padding-bottom: 3rem;
   }
   .wrap { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 0; }
-  header.top {
-    padding: 1.5rem 0 1rem;
-    text-align: center;
-  }
   .eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.72rem;
     color: var(--text-dim);
     font-weight: 700;
-  }
-  h1 {
-    font-size: 1.6rem;
-    margin: 0.3rem 0 0.2rem;
-    letter-spacing: -0.01em;
   }
   .bib {
     display: inline-block;
@@ -201,41 +194,65 @@
   }
   .howto b { color: var(--text); }
 
-  /* Course */
-  .leg {
-    display: grid;
-    grid-template-columns: 10px 1fr auto;
-    gap: 0.7rem;
-    align-items: start;
-    padding: 0.55rem 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .leg:last-child { border-bottom: none; }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    margin-top: 0.4rem;
-  }
-  .leg-name { font-weight: 700; font-size: 0.92rem; }
-  .leg-desc { color: var(--text-dim); font-size: 0.82rem; margin-top: 0.1rem; }
-  .leg-dist { font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
-
-  /* Course map */
+  /* Hero map */
+  .hero { position: relative; }
   #course-map {
-    height: 360px;
+    height: min(72vh, 620px);
+    min-height: 400px;
     width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
+  }
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
     border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
   }
-  .map-legend {
+  .hero-chip {
+    position: absolute;
+    z-index: 500;
+    padding: 0.5rem 0.75rem;
+  }
+  .hero-chip.hero-title {
+    top: 0.7rem;
+    right: 0.7rem;
+    text-align: right;
+  }
+  .hero-chip.hero-title .eyebrow { font-size: 0.62rem; }
+  .hero-chip.hero-title .hero-name {
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin: 0.1rem 0 0.25rem;
+    white-space: nowrap;
+  }
+  .hero-chip.hero-legend {
+    bottom: 0.7rem;
+    left: 0.7rem;
     display: flex;
+    gap: 0.55rem;
     flex-wrap: wrap;
-    gap: 0.9rem;
-    margin-top: 0.75rem;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
+    max-width: calc(100% - 1.4rem);
   }
-  .map-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
-  .map-legend .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .hero-caption {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 0.9rem 0 0.2rem;
+  }
+  .swim-goal-banner {
+    background: var(--swim);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-align: center;
+    padding: 0.6rem 0.9rem;
+    border-radius: 10px;
+    margin-bottom: 0.9rem;
+  }
+  .hero-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .hero-legend .sw { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); }
   .leaflet-container { background: var(--surface-2); font-family: inherit; }
   .map-marker-label {
@@ -299,16 +316,28 @@
 </style>
 </head>
 <body>
+
+<div class="hero">
+  <div id="course-map"></div>
+  <div class="hero-chip hero-title glass">
+    <div class="eyebrow">Race Day</div>
+    <div class="hero-name">Tracking Dad</div>
+    <span class="bib">BIB #1597</span>
+  </div>
+  <div class="hero-chip hero-legend glass">
+    <span><i class="sw" style="background: var(--swim)"></i>Swim/T1</span>
+    <span><i class="sw" style="background: var(--bike)"></i>Bike</span>
+    <span><i class="sw" style="background: var(--run)"></i>Run</span>
+    <span><i class="sw" style="background: var(--warn)"></i>Finish</span>
+  </div>
+</div>
+
 <div class="wrap">
 
-  <header class="top">
-    <div class="eyebrow">Race Day Dashboard</div>
-    <h1>Tracking Dad 🏊‍♂️🚴‍♂️🏃‍♂️</h1>
-    <span class="bib">BIB #1597</span>
-    <div class="subhead">IRONMAN Canada&ndash;Ottawa &middot; Full Distance &middot; Sunday, August 2, 2026</div>
-  </header>
+  <div class="hero-caption">IRONMAN Canada&ndash;Ottawa &middot; Full Distance &middot; Sunday, August 2, 2026 &middot; pan/zoom the map above and tap a pin for details</div>
 
   <section class="card countdown-card">
+    <div class="swim-goal-banner">🏊 Goal: in the water by <b>7:00&nbsp;AM</b>, out by <b>~9:00&nbsp;AM</b> (2h00m) &mdash; his slowest leg</div>
     <h2>Countdown</h2>
     <div id="countdown-status" class="countdown-status">Loading&hellip;</div>
     <div class="countdown" id="countdown">
@@ -323,7 +352,7 @@
       <input type="time" id="start-time" />
       <span id="tz-label"></span>
     </div>
-    <div class="note">Default is 6:00&nbsp;AM at Britannia Beach (per OC&nbsp;Transpo's event notice) &mdash; adjust it here if Dad's athlete guide gives a different confirmed gun time. Your choice is saved on this device.</div>
+    <div class="note">Default reflects Dad's goal start of 7:00&nbsp;AM at Britannia Beach &mdash; adjust it here if his athlete guide gives a different confirmed gun time. Your choice is saved on this device.</div>
   </section>
 
   <section class="card">
@@ -354,40 +383,9 @@
   </section>
 
   <section class="card">
-    <h2>Course Map</h2>
-    <div id="course-map"></div>
-    <div class="map-legend">
-      <span><i class="sw" style="background: var(--swim)"></i> Swim / T1</span>
-      <span><i class="sw" style="background: var(--bike)"></i> Bike loop</span>
-      <span><i class="sw" style="background: var(--run)"></i> Run</span>
-      <span><i class="sw" style="background: var(--warn)"></i> Finish</span>
-    </div>
-    <div class="note">Pan/zoom and tap a pin for details. Markers show known landmarks along the course; the dashed line is an illustrative flow, not the certified turn-by-turn route &mdash; for the official course maps see ironman.com or Ottawa Tourism (linked above).</div>
-  </section>
-
-  <section class="card">
-    <h2>Course</h2>
-    <div class="leg">
-      <div class="dot" style="background: var(--swim)"></div>
-      <div><div class="leg-name">Swim</div><div class="leg-desc">2-loop swim in the Ottawa River, Britannia Beach</div></div>
-      <div class="leg-dist">3.8 km</div>
-    </div>
-    <div class="leg">
-      <div class="dot" style="background: var(--bike)"></div>
-      <div><div class="leg-name">Bike</div><div class="leg-desc">2.75 closed-road loops from Britannia through Ottawa &amp; Gatineau/Hull, along the Rideau Canal</div></div>
-      <div class="leg-dist">180 km</div>
-    </div>
-    <div class="leg">
-      <div class="dot" style="background: var(--run)"></div>
-      <div><div class="leg-name">Run</div><div class="leg-desc">Starts near Ch&acirc;teau Laurier, along the Rideau Canal, Dow's Lake &amp; the Experimental Farm, finishing on Parliament Hill</div></div>
-      <div class="leg-dist">42.2 km</div>
-    </div>
-  </section>
-
-  <section class="card">
     <h2>Expected Splits Planner</h2>
     <div class="split-form">
-      <div class="field"><label for="in-swim">Swim time (h:mm)</label><input id="in-swim" type="text" placeholder="1:15" value="1:15" /></div>
+      <div class="field"><label for="in-swim">Swim time (h:mm)</label><input id="in-swim" type="text" placeholder="2:00" value="2:00" /></div>
       <div class="field"><label for="in-t1">T1 (mm:ss)</label><input id="in-t1" type="text" placeholder="8:00" value="8:00" /></div>
       <div class="field"><label for="in-bike">Bike time (h:mm)</label><input id="in-bike" type="text" placeholder="6:30" value="6:30" /></div>
       <div class="field"><label for="in-t2">T2 (mm:ss)</label><input id="in-t2" type="text" placeholder="6:00" value="6:00" /></div>
@@ -397,7 +395,7 @@
       <thead><tr><th>Checkpoint</th><th>Clock time</th><th>Elapsed</th><th>Typical cutoff</th></tr></thead>
       <tbody id="splits-body"></tbody>
     </table>
-    <div class="note">Enter Dad's realistic goal times to see the estimated clock time at each checkpoint. Cutoffs shown (2:20 swim, ~10:30 bike, 17:00 overall) are typical full-IRONMAN limits &mdash; check his athlete guide for Ottawa's official numbers.</div>
+    <div class="note">Enter Dad's realistic goal times to see the estimated clock time at each checkpoint &mdash; swim defaults to his 2h00m goal (his slowest leg). Cutoffs shown (2:20 swim, ~10:30 bike, 17:00 overall) are typical full-IRONMAN limits &mdash; check his athlete guide for Ottawa's official numbers.</div>
   </section>
 
   <footer>
@@ -415,7 +413,7 @@
   function defaultStart() {
     var saved = localStorage.getItem(LS_KEY);
     if (saved) return new Date(saved);
-    return new Date('2026-08-02T06:00:00-04:00');
+    return new Date('2026-08-02T07:00:00-04:00');
   }
 
   var startDate = defaultStart();
@@ -551,7 +549,7 @@
     finish: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim()
   };
 
-  var map = L.map('course-map', { scrollWheelZoom: false }).setView([45.406, -75.715], 12);
+  var map = L.map('course-map', { scrollWheelZoom: false });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -570,7 +568,7 @@
   }
 
   var points = [
-    { ll: [45.3612, -75.7995], color: colors.swim, name: 'Swim Start / T1', desc: '3.8 km, 2-loop swim in the Ottawa River, then transition at Britannia Beach / Britannia Park.' },
+    { ll: [45.3612, -75.7995], color: colors.swim, name: 'Swim Start / T1', desc: '3.8 km, 2-loop swim in the Ottawa River, then transition at Britannia Beach / Britannia Park. Goal: in the water 7:00 AM, out by ~9:00 AM &mdash; his slowest leg.' },
     { ll: [45.4280, -75.7100], color: colors.bike, name: 'Bike — Gatineau/Hull loop', desc: 'The 180 km bike course (2.75 closed-road loops) crosses into Gatineau/Hull before heading back along the river.' },
     { ll: [45.4185, -75.6960], color: colors.bike, name: 'Bike — Rideau Canal', desc: 'Bike route runs along the Rideau Canal on Colonel By Drive near downtown.' },
     { ll: [45.4460, -75.5990], color: colors.bike, name: 'Bike — Beacon Hill', desc: 'Eastern turnaround area of the bike loop.' },
@@ -592,6 +590,8 @@
     opacity: 0.55,
     dashArray: '6 8'
   }).addTo(map);
+
+  map.fitBounds(L.latLngBounds(points.map(function (p) { return p.ll; })), { padding: [36, 36] });
 
   map.on('focus', function () { map.scrollWheelZoom.enable(); });
   map.on('blur', function () { map.scrollWheelZoom.disable(); });
