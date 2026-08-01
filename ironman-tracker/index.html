@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Dad at IRONMAN Canada-Ottawa · Bib 1597</title>
 <meta name="description" content="Race-day dashboard for tracking Dad (Bib 1597) at IRONMAN Canada-Ottawa, August 2, 2026." />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root {
     color-scheme: light dark;
@@ -218,6 +219,33 @@
   .leg-desc { color: var(--text-dim); font-size: 0.82rem; margin-top: 0.1rem; }
   .leg-dist { font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
 
+  /* Course map */
+  #course-map {
+    height: 360px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .map-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .map-legend .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); }
+  .leaflet-container { background: var(--surface-2); font-family: inherit; }
+  .map-marker-label {
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+
   /* Splits calculator */
   .split-form {
     display: grid;
@@ -295,7 +323,7 @@
       <input type="time" id="start-time" />
       <span id="tz-label"></span>
     </div>
-    <div class="note">Default is a typical full-IRONMAN 7:00&nbsp;AM start &mdash; adjust it here once you know the confirmed gun time from Dad's athlete guide. Your choice is saved on this device.</div>
+    <div class="note">Default is 6:00&nbsp;AM at Britannia Beach (per OC&nbsp;Transpo's event notice) &mdash; adjust it here if Dad's athlete guide gives a different confirmed gun time. Your choice is saved on this device.</div>
   </section>
 
   <section class="card">
@@ -326,6 +354,18 @@
   </section>
 
   <section class="card">
+    <h2>Course Map</h2>
+    <div id="course-map"></div>
+    <div class="map-legend">
+      <span><i class="sw" style="background: var(--swim)"></i> Swim / T1</span>
+      <span><i class="sw" style="background: var(--bike)"></i> Bike loop</span>
+      <span><i class="sw" style="background: var(--run)"></i> Run</span>
+      <span><i class="sw" style="background: var(--warn)"></i> Finish</span>
+    </div>
+    <div class="note">Pan/zoom and tap a pin for details. Markers show known landmarks along the course; the dashed line is an illustrative flow, not the certified turn-by-turn route &mdash; for the official course maps see ironman.com or Ottawa Tourism (linked above).</div>
+  </section>
+
+  <section class="card">
     <h2>Course</h2>
     <div class="leg">
       <div class="dot" style="background: var(--swim)"></div>
@@ -334,12 +374,12 @@
     </div>
     <div class="leg">
       <div class="dot" style="background: var(--bike)"></div>
-      <div><div class="leg-name">Bike</div><div class="leg-desc">Closed-road loop from Britannia along the river, Gatineau/Hull &amp; the Rideau Canal</div></div>
+      <div><div class="leg-name">Bike</div><div class="leg-desc">2.75 closed-road loops from Britannia through Ottawa &amp; Gatineau/Hull, along the Rideau Canal</div></div>
       <div class="leg-dist">180 km</div>
     </div>
     <div class="leg">
       <div class="dot" style="background: var(--run)"></div>
-      <div><div class="leg-name">Run</div><div class="leg-desc">Downtown, Dow's Lake &amp; the Experimental Farm, finishing on Parliament Hill</div></div>
+      <div><div class="leg-name">Run</div><div class="leg-desc">Starts near Ch&acirc;teau Laurier, along the Rideau Canal, Dow's Lake &amp; the Experimental Farm, finishing on Parliament Hill</div></div>
       <div class="leg-dist">42.2 km</div>
     </div>
   </section>
@@ -375,7 +415,7 @@
   function defaultStart() {
     var saved = localStorage.getItem(LS_KEY);
     if (saved) return new Date(saved);
-    return new Date('2026-08-02T07:00:00-04:00');
+    return new Date('2026-08-02T06:00:00-04:00');
   }
 
   var startDate = defaultStart();
@@ -496,6 +536,65 @@
     });
   }
   renderSplits();
+})();
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  if (typeof L === 'undefined') return;
+
+  var colors = {
+    swim: getComputedStyle(document.documentElement).getPropertyValue('--swim').trim(),
+    bike: getComputedStyle(document.documentElement).getPropertyValue('--bike').trim(),
+    run: getComputedStyle(document.documentElement).getPropertyValue('--run').trim(),
+    finish: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim()
+  };
+
+  var map = L.map('course-map', { scrollWheelZoom: false }).setView([45.406, -75.715], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  function pin(color, label) {
+    return L.divIcon({
+      className: '',
+      html: '<div style="background:' + color + ';width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>' +
+            (label ? '<div class="map-marker-label" style="margin-top:2px">' + label + '</div>' : ''),
+      iconSize: [16, 16],
+      iconAnchor: [8, 16],
+      popupAnchor: [0, -16]
+    });
+  }
+
+  var points = [
+    { ll: [45.3612, -75.7995], color: colors.swim, name: 'Swim Start / T1', desc: '3.8 km, 2-loop swim in the Ottawa River, then transition at Britannia Beach / Britannia Park.' },
+    { ll: [45.4280, -75.7100], color: colors.bike, name: 'Bike — Gatineau/Hull loop', desc: 'The 180 km bike course (2.75 closed-road loops) crosses into Gatineau/Hull before heading back along the river.' },
+    { ll: [45.4185, -75.6960], color: colors.bike, name: 'Bike — Rideau Canal', desc: 'Bike route runs along the Rideau Canal on Colonel By Drive near downtown.' },
+    { ll: [45.4460, -75.5990], color: colors.bike, name: 'Bike — Beacon Hill', desc: 'Eastern turnaround area of the bike loop.' },
+    { ll: [45.4247, -75.6947], color: colors.run, name: 'T2 / Run Start', desc: 'Run begins near Château Laurier on Sussex Drive.' },
+    { ll: [45.3985, -75.7025], color: colors.run, name: "Run — Dow's Lake", desc: 'Run course passes Dow’s Lake.' },
+    { ll: [45.3875, -75.7150], color: colors.run, name: 'Run — Experimental Farm', desc: 'Run course loops through the Central Experimental Farm.' },
+    { ll: [45.4236, -75.7003], color: colors.finish, name: 'FINISH — Parliament Hill', desc: 'The finish line! 🏁' }
+  ];
+
+  points.forEach(function (p) {
+    L.marker(p.ll, { icon: pin(p.color) })
+      .addTo(map)
+      .bindPopup('<b>' + p.name + '</b><br>' + p.desc);
+  });
+
+  L.polyline(points.map(function (p) { return p.ll; }), {
+    color: colors.finish,
+    weight: 2,
+    opacity: 0.55,
+    dashArray: '6 8'
+  }).addTo(map);
+
+  map.on('focus', function () { map.scrollWheelZoom.enable(); });
+  map.on('blur', function () { map.scrollWheelZoom.disable(); });
 })();
 </script>
 </body>
