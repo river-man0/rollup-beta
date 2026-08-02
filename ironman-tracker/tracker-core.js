@@ -125,12 +125,18 @@
   function segmentBounds(points, segment) {
     var pts = segmentPoints(points, segment);
     if (!pts.length) return null;
+    return boundsOfLatLngs(pts.map(function (p) { return [p.lat, p.lng]; }));
+  }
+
+  // Bounds of an array of [lat, lng] pairs (e.g. course geometry vertices).
+  function boundsOfLatLngs(latlngs) {
+    if (!latlngs || !latlngs.length) return null;
     var minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-    pts.forEach(function (p) {
-      if (p.lat < minLat) minLat = p.lat;
-      if (p.lat > maxLat) maxLat = p.lat;
-      if (p.lng < minLng) minLng = p.lng;
-      if (p.lng > maxLng) maxLng = p.lng;
+    latlngs.forEach(function (ll) {
+      if (ll[0] < minLat) minLat = ll[0];
+      if (ll[0] > maxLat) maxLat = ll[0];
+      if (ll[1] < minLng) minLng = ll[1];
+      if (ll[1] > maxLng) maxLng = ll[1];
     });
     return [[minLat, minLng], [maxLat, maxLng]];
   }
@@ -185,6 +191,7 @@
     progressPercent: progressPercent,
     segmentPoints: segmentPoints,
     segmentBounds: segmentBounds,
+    boundsOfLatLngs: boundsOfLatLngs,
     redactPII: redactPII,
     formatKm: formatKm,
     formatTimeValue: formatTimeValue

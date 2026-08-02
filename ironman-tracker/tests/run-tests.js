@@ -7,6 +7,7 @@
 
 const path = require('path');
 const POINTS = require(path.join(__dirname, '..', 'points-data.js'));
+const GEO = require(path.join(__dirname, '..', 'course-geometry.js'));
 const Core = require(path.join(__dirname, '..', 'tracker-core.js'));
 
 let passed = 0, failed = 0;
@@ -175,6 +176,65 @@ test('every segment view is inside the full-course view', () => {
     ok(b[0][0] >= all[0][0] && b[1][0] <= all[1][0], seg + ' lat inside all');
     ok(b[0][1] >= all[0][1] && b[1][1] <= all[1][1], seg + ' lng inside all');
   });
+});
+
+console.log('\n== official course geometry (real GPS polylines) ==');
+// crude flat-earth metres, plenty accurate at Ottawa's latitude for tolerances
+function distM(a, b) {
+  const dLat = (b[0] - a[0]) * 111320;
+  const dLng = (b[1] - a[1]) * 111320 * Math.cos(a[0] * Math.PI / 180);
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+}
+test('three legs present with road-detail vertex counts', () => {
+  ok(GEO.swim.length >= 10, 'swim has ' + GEO.swim.length);
+  ok(GEO.bike.length > 5000, 'bike has ' + GEO.bike.length);
+  ok(GEO.run.length > 1000, 'run has ' + GEO.run.length);
+});
+test('geometry starts at the START mat and ends at the FINISH mat', () => {
+  const start = Core.findPoint(POINTS, 'START'), fin = Core.findPoint(POINTS, 'FINISH');
+  ok(distM(GEO.swim[0], [start.lat, start.lng]) < 50, 'swim[0] near START');
+  ok(distM(GEO.run[GEO.run.length - 1], [fin.lat, fin.lng]) < 100, 'run end near FINISH');
+});
+test('legs connect seamlessly at T1 and T2', () => {
+  eq(GEO.bike[0], GEO.swim[GEO.swim.length - 1]);
+  eq(GEO.run[0], GEO.bike[GEO.bike.length - 1]);
+});
+test('all geometry vertices are inside the Ottawa/Gatineau bounding box', () => {
+  ['swim', 'bike', 'run'].forEach(seg => GEO[seg].forEach(v => {
+    ok(v[0] > 45.30 && v[0] < 45.50 && v[1] > -75.90 && v[1] < -75.50, seg + ' vertex ' + v);
+  }));
+});
+test('bike and run lines are continuous (no gaps over 300 m)', () => {
+  ['bike', 'run'].forEach(seg => {
+    for (let i = 1; i < GEO[seg].length; i++) {
+      const g = distM(GEO[seg][i - 1], GEO[seg][i]);
+      ok(g < 300, seg + ' gap of ' + Math.round(g) + ' m at vertex ' + i);
+    }
+  });
+});
+test('every timing mat lies on (within 300 m of) its leg\'s line', () => {
+  const legOf = p => p.segment === 'transition' ? (p.name === 'T1' ? 'swim' : 'bike') : p.segment;
+  POINTS.forEach(p => {
+    const line = GEO[legOf(p)];
+    let best = Infinity;
+    for (const v of line) best = Math.min(best, distM(v, [p.lat, p.lng]));
+    ok(best < 300, p.name + ' is ' + Math.round(best) + ' m from the ' + legOf(p) + ' line');
+  });
+});
+test('geometry-derived bounds contain the corresponding timing mats', () => {
+  const gb = {
+    swim: Core.boundsOfLatLngs(GEO.swim),
+    bike: Core.boundsOfLatLngs(GEO.bike),
+    run: Core.boundsOfLatLngs(GEO.run)
+  };
+  const within = (b, p) => p.lat >= b[0][0] && p.lat <= b[1][0] && p.lng >= b[0][1] && p.lng <= b[1][1];
+  ok(within(gb.swim, Core.findPoint(POINTS, 'SWIM')), 'SWIM mat in swim bounds');
+  POINTS.filter(p => p.segment === 'bike').forEach(p => ok(within(gb.bike, p), p.name + ' in bike bounds'));
+  POINTS.filter(p => p.segment === 'run').forEach(p => ok(within(gb.run, p), p.name + ' in run bounds'));
+});
+test('boundsOfLatLngs computes a correct envelope', () => {
+  eq(Core.boundsOfLatLngs([[2, 30], [1, 40], [3, 35]]), [[1, 30], [3, 40]]);
+  eq(Core.boundsOfLatLngs([]), null);
 });
 
 console.log('\n== privacy redaction for the debug panel ==');

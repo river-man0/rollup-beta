@@ -381,7 +381,7 @@
     <button class="seg-btn" data-view="run"><span class="sw" style="background: var(--run)"></span>Run</button>
     <button class="seg-btn" data-view="all">All</button>
   </div>
-  <div class="map-note glass">Pins are the race's official timing-mat locations (RTRT.me). Connecting lines are straight-line mat-to-mat guides, not the certified road route.</div>
+  <div class="map-note glass">Official course geometry and timing-mat locations from the race's timing provider (RTRT.me). The swim leg is drawn as straight chords between turn buoys.</div>
 </div>
 
 <div class="infobar">
@@ -473,12 +473,14 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="points-data.js"></script>
+<script src="course-geometry.js"></script>
 <script src="tracker-core.js"></script>
 <script>
 (function () {
   'use strict';
   var Core = window.TrackerCore;
   var POINTS = window.COURSE_POINTS;
+  var GEO = window.COURSE_GEOMETRY;
 
   // ---- Live timing configuration (all values are public: they are embedded
   // in the official tracker web page / issued to anonymous clients) ----
@@ -507,22 +509,21 @@
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
   }).addTo(map);
 
+  // View bookmarks are computed from the official course geometry so loops
+  // (e.g. the bike's Gatineau excursion) are fully inside their view.
   var bounds = {
-    swim: Core.segmentBounds(POINTS, 'swim'),
-    bike: Core.segmentBounds(POINTS, 'bike'),
-    run: Core.segmentBounds(POINTS, 'run'),
-    all: Core.segmentBounds(POINTS, 'all')
+    swim: Core.boundsOfLatLngs(GEO.swim),
+    bike: Core.boundsOfLatLngs(GEO.bike),
+    run: Core.boundsOfLatLngs(GEO.run),
+    all: Core.boundsOfLatLngs(GEO.swim.concat(GEO.bike, GEO.run))
   };
   var PAD = { paddingTopLeft: [20, 56], paddingBottomRight: [20, 40] };
 
-  // Segment polylines: connect the mats of each leg in course order.
-  function segLine(seg) {
-    return Core.segmentPoints(POINTS, seg).map(function (p) { return [p.lat, p.lng]; });
-  }
+  // Official course geometry from the timing provider, one polyline per leg.
   var lines = {
-    swim: L.polyline(segLine('swim'), { color: segColors.swim }),
-    bike: L.polyline(segLine('bike'), { color: segColors.bike }),
-    run:  L.polyline(segLine('run'),  { color: segColors.run })
+    swim: L.polyline(GEO.swim, { color: segColors.swim }),
+    bike: L.polyline(GEO.bike, { color: segColors.bike }),
+    run:  L.polyline(GEO.run,  { color: segColors.run })
   };
   Object.keys(lines).forEach(function (k) { lines[k].addTo(map); });
 
@@ -548,9 +549,8 @@
     Object.keys(lines).forEach(function (seg) {
       var isActive = seg === activeSeg;
       lines[seg].setStyle({
-        weight: isActive ? 5 : 2.5,
-        opacity: isActive ? 0.9 : 0.45,
-        dashArray: isActive ? null : '5 7'
+        weight: isActive ? 5 : 3,
+        opacity: isActive ? 0.95 : 0.35
       });
     });
     POINTS.forEach(function (p) {
