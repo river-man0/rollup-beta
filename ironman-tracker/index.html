@@ -3,45 +3,50 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Dad at IRONMAN Canada-Ottawa · Bib 1597</title>
-<meta name="description" content="Race-day dashboard for tracking Dad (Bib 1597) at IRONMAN Canada-Ottawa, August 2, 2026." />
+<title>IRONMAN Canada-Ottawa · Live Dashboard · Bib 1597</title>
+<meta name="description" content="Live race-day dashboard for Bib 1597 at IRONMAN Canada-Ottawa, August 2, 2026 — official timing-mat locations, live chip reads, and course map." />
+<link rel="preconnect" href="https://api.rtrt.me" crossorigin />
+<link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f5f6f8;
+    --bg: #f4f6f8;
     --surface: #ffffff;
-    --surface-2: #eef0f4;
-    --text: #14171c;
-    --text-dim: #5b6270;
-    --border: #dfe3e9;
-    --accent: #d1004b;
-    --accent-2: #0b6e4f;
+    --surface-2: #eceff3;
+    --text: #16202b;
+    --text-dim: #5c6675;
+    --border: #dde2e9;
+    --accent: #c8102e;
     --accent-ink: #ffffff;
-    --swim: #0b6e4f;
-    --bike: #1f5fbf;
-    --run: #d1004b;
-    --warn: #b8860b;
-    --shadow: 0 1px 2px rgba(16,20,26,0.06), 0 8px 24px rgba(16,20,26,0.06);
-    --glass: rgba(255,255,255,0.9);
+    --swim: #0e7c5b;
+    --bike: #1f56c4;
+    --run: #c8102e;
+    --transition: #7c6a9c;
+    --warn: #a97a12;
+    --ok: #0e7c5b;
+    --glass: rgba(255,255,255,0.92);
+    --shadow: 0 1px 2px rgba(16,24,32,0.06), 0 10px 28px rgba(16,24,32,0.07);
+    --radius: 12px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0e1013;
-      --surface: #171a1f;
-      --surface-2: #1e222a;
-      --text: #eef0f3;
-      --text-dim: #9aa2b1;
-      --border: #2a2f38;
-      --accent: #ff4f7e;
-      --accent-2: #35c98a;
-      --accent-ink: #14171c;
-      --swim: #35c98a;
-      --bike: #6ea8ff;
-      --run: #ff4f7e;
-      --warn: #e0b23c;
-      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
-      --glass: rgba(20,23,28,0.82);
+      --bg: #0d1117;
+      --surface: #161c24;
+      --surface-2: #1e2630;
+      --text: #e9edf2;
+      --text-dim: #98a3b3;
+      --border: #2a3441;
+      --accent: #ff5a70;
+      --accent-ink: #16202b;
+      --swim: #34c391;
+      --bike: #7aa5ff;
+      --run: #ff5a70;
+      --transition: #ab98d1;
+      --warn: #e0b455;
+      --ok: #34c391;
+      --glass: rgba(17,22,29,0.88);
+      --shadow: 0 1px 2px rgba(0,0,0,0.45), 0 10px 28px rgba(0,0,0,0.4);
     }
   }
   * { box-sizing: border-box; }
@@ -49,302 +54,361 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.45;
-    padding-bottom: 3rem;
+    padding-bottom: 76px; /* room for the fixed info bar */
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 0; }
-  .eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-weight: 700;
-  }
-  .bib {
-    display: inline-block;
-    background: var(--accent);
-    color: var(--accent-ink);
-    font-weight: 800;
-    font-size: 0.85rem;
-    padding: 0.15rem 0.6rem;
-    border-radius: 999px;
-    margin-top: 0.3rem;
-  }
-  .subhead {
-    color: var(--text-dim);
-    font-size: 0.9rem;
-    margin-top: 0.4rem;
-  }
+  .num { font-variant-numeric: tabular-nums; }
+  a { color: inherit; }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.1rem 1.2rem;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow);
-  }
-  .card h2 {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    margin: 0 0 0.75rem;
-  }
-
-  /* Countdown */
-  .countdown-card { text-align: center; }
-  .countdown {
-    display: flex;
-    justify-content: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    margin: 0.4rem 0 0.6rem;
-  }
-  .cd-unit {
-    background: var(--surface-2);
-    border-radius: 12px;
-    padding: 0.6rem 0.75rem;
-    min-width: 4.2rem;
-  }
-  .cd-num {
-    font-size: 1.7rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
-  .cd-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    margin-top: 0.25rem;
-  }
-  .countdown-status {
-    font-weight: 700;
-    font-size: 1rem;
-    margin-top: 0.2rem;
-  }
-  .start-time-row {
+  /* ---------- Top app bar ---------- */
+  .appbar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    flex-wrap: wrap;
-  }
-  .start-time-row input[type="time"], .start-time-row input[type="date"] {
-    font: inherit;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.25rem 0.5rem;
-  }
-  .note {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    margin-top: 0.5rem;
-  }
-
-  /* Tracker buttons */
-  .track-buttons { display: grid; gap: 0.6rem; }
-  .btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     gap: 0.75rem;
-    text-decoration: none;
-    color: var(--accent-ink);
-    background: var(--accent);
-    padding: 0.85rem 1rem;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.95rem;
+    padding: 0.65rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
   }
-  .btn small {
+  .appbar .race {
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .appbar .race small {
     display: block;
     font-weight: 500;
-    opacity: 0.85;
-    font-size: 0.75rem;
-    margin-top: 0.1rem;
-  }
-  .btn.secondary {
-    background: var(--surface-2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn .arrow { font-size: 1.1rem; opacity: 0.8; flex-shrink: 0; }
-  .btn-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-  }
-  .btn-grid .btn { flex-direction: column; align-items: flex-start; justify-content: center; }
-
-  .howto {
-    margin: 0.9rem 0 0;
-    padding-top: 0.9rem;
-    border-top: 1px dashed var(--border);
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     color: var(--text-dim);
+    letter-spacing: 0.04em;
   }
-  .howto b { color: var(--text); }
+  .appbar .spacer { flex: 1; }
+  .bib {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .live-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); }
+  .live-pill.on { color: var(--accent); border-color: var(--accent); }
+  .live-pill.on .dot { background: var(--accent); animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: 0.25; } }
 
-  /* Hero map */
+  /* ---------- Hero map ---------- */
   .hero { position: relative; }
   #course-map {
-    height: min(72vh, 620px);
-    min-height: 400px;
+    height: min(64vh, 600px);
+    min-height: 380px;
     width: 100%;
   }
   .glass {
     background: var(--glass);
-    backdrop-filter: blur(10px) saturate(150%);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
   }
-  .hero-chip {
+  .seg-btns {
     position: absolute;
-    z-index: 500;
-    padding: 0.5rem 0.75rem;
-  }
-  .hero-chip.hero-title {
     top: 0.7rem;
     right: 0.7rem;
-    text-align: right;
+    z-index: 800;
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.3rem;
   }
-  .hero-chip.hero-title .eyebrow { font-size: 0.62rem; }
-  .hero-chip.hero-title .hero-name {
-    font-weight: 800;
-    font-size: 1.05rem;
-    margin: 0.1rem 0 0.25rem;
-    white-space: nowrap;
+  .seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
   }
-  .hero-chip.hero-legend {
+  .seg-btn:hover { background: var(--surface-2); }
+  .seg-btn.active { border-color: var(--border); background: var(--surface-2); }
+  .seg-btn .sw { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .map-note {
+    position: absolute;
     bottom: 0.7rem;
     left: 0.7rem;
-    display: flex;
-    gap: 0.55rem;
-    flex-wrap: wrap;
+    z-index: 800;
+    max-width: min(430px, calc(100% - 1.4rem));
+    padding: 0.45rem 0.65rem;
     font-size: 0.7rem;
-    max-width: calc(100% - 1.4rem);
-  }
-  .hero-caption {
-    text-align: center;
     color: var(--text-dim);
-    font-size: 0.85rem;
-    padding: 0.9rem 0 0.2rem;
-  }
-  .swim-goal-banner {
-    background: var(--swim);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.88rem;
-    text-align: center;
-    padding: 0.6rem 0.9rem;
-    border-radius: 10px;
-    margin-bottom: 0.9rem;
-  }
-  .hero-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
-  .hero-legend .sw { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); }
-  .leaflet-container { background: var(--surface-2); font-family: inherit; }
-  .map-marker-label {
-    font-weight: 800;
-    font-size: 0.7rem;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    white-space: nowrap;
   }
 
-  /* Splits calculator */
-  .split-form {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.7rem;
-    margin-bottom: 1rem;
+  /* Athlete marker pulse (Leaflet divIcon) */
+  .athlete-marker { position: relative; }
+  .athlete-marker .core {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.45);
   }
-  .field label {
-    display: block;
-    font-size: 0.75rem;
+  .athlete-marker .ring {
+    position: absolute; top: -7px; left: -7px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.5); opacity: 0.9; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); }
+  .leaflet-container { background: var(--surface-2); font-family: inherit; }
+
+  /* ---------- Bottom info bar ---------- */
+  .infobar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.6rem 1rem;
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    background: var(--glass);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border-top: 1px solid var(--border);
+  }
+  .infobar .seg-badge {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: var(--text-dim);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+  }
+  .infobar .main {
+    flex: 1;
+    min-width: 0;
+  }
+  .infobar .headline {
+    font-weight: 700;
+    font-size: 0.86rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .infobar .sub {
+    font-size: 0.72rem;
     color: var(--text-dim);
-    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .field input {
-    width: 100%;
+  .zoomto {
     font: inherit;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.5rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 9px;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
   }
-  table.splits {
+  .zoomto:disabled { opacity: 0.45; cursor: default; }
+
+  /* ---------- Content cards ---------- */
+  .wrap { max-width: 780px; margin: 0 auto; padding: 1.1rem 1rem 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.05rem 1.15rem;
+    margin-bottom: 0.9rem;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-dim);
+    margin: 0 0 0.7rem;
+    font-weight: 700;
+  }
+  .note { font-size: 0.76rem; color: var(--text-dim); margin-top: 0.55rem; }
+
+  table.data {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
   }
-  table.splits th, table.splits td {
+  table.data th, table.data td {
     text-align: left;
-    padding: 0.45rem 0.3rem;
+    padding: 0.42rem 0.35rem;
     border-bottom: 1px solid var(--border);
   }
-  table.splits th { color: var(--text-dim); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  table.splits td.warn-row { color: var(--warn); font-weight: 700; }
+  table.data tr:last-child td { border-bottom: none; }
+  table.data th {
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
   .pill {
     display: inline-block;
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    padding: 0.1rem 0.45rem;
+    padding: 0.12rem 0.5rem;
     border-radius: 999px;
     color: #fff;
   }
+  .empty { color: var(--text-dim); font-size: 0.85rem; padding: 0.4rem 0; }
 
-  footer {
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    padding: 1.5rem 1rem 0;
+  /* Countdown */
+  .countdown-row { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .cd-big { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.01em; }
+  .cd-caption { font-size: 0.8rem; color: var(--text-dim); }
+  .start-time-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-top: 0.7rem; font-size: 0.82rem; color: var(--text-dim); flex-wrap: wrap;
   }
-  a { color: inherit; }
+  .start-time-row input {
+    font: inherit; background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 0.28rem 0.5rem;
+  }
+
+  /* Links */
+  .btn-row { display: grid; gap: 0.55rem; grid-template-columns: 1fr 1fr; }
+  .btn-row .wide { grid-column: 1 / -1; }
+  .btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    text-decoration: none; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 0.7rem 0.85rem; border-radius: 10px;
+    font-weight: 600; font-size: 0.85rem;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn small { display: block; font-weight: 500; opacity: 0.8; font-size: 0.7rem; }
+  .btn .arrow { opacity: 0.7; flex-shrink: 0; }
+
+  /* Splits planner */
+  .split-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 0.9rem; }
+  .field label { display: block; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.22rem; }
+  .field input {
+    width: 100%; font: inherit; background: var(--surface-2);
+    border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 0.45rem 0.55rem;
+  }
+  td.warn-row { color: var(--warn); font-weight: 700; }
+
+  /* Debug panel */
+  details.card > summary {
+    cursor: pointer;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-dim);
+    font-weight: 700;
+    list-style: none;
+  }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary::after { content: " ▸"; }
+  details[open].card > summary::after { content: " ▾"; }
+  .kv { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: 0.28rem 0.9rem; font-size: 0.78rem; margin-top: 0.75rem; }
+  .kv dt { color: var(--text-dim); }
+  .kv dd { margin: 0; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.74rem; }
+  pre.debug {
+    margin: 0.7rem 0 0;
+    max-height: 300px;
+    overflow: auto;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem;
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+  .refresh {
+    font: inherit; font-size: 0.75rem; font-weight: 600;
+    color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.35rem 0.7rem; cursor: pointer; margin-top: 0.7rem;
+  }
+
+  footer { text-align: center; font-size: 0.72rem; color: var(--text-dim); padding: 1rem 1rem 0.5rem; }
 </style>
 </head>
 <body>
 
+<header class="appbar">
+  <div class="race">IRONMAN Canada&ndash;Ottawa<small>Full distance &middot; Sunday, August 2, 2026 &middot; Ottawa, ON</small></div>
+  <div class="spacer"></div>
+  <span id="live-pill" class="live-pill"><span class="dot"></span><span id="live-pill-text">PRE-RACE</span></span>
+  <span class="bib">BIB 1597</span>
+</header>
+
 <div class="hero">
   <div id="course-map"></div>
-  <div class="hero-chip hero-title glass">
-    <div class="eyebrow">Race Day</div>
-    <div class="hero-name">Tracking Dad</div>
-    <span class="bib">BIB #1597</span>
+  <div class="seg-btns glass" role="group" aria-label="Zoom to course segment">
+    <button class="seg-btn" data-view="swim"><span class="sw" style="background: var(--swim)"></span>Swim</button>
+    <button class="seg-btn" data-view="bike"><span class="sw" style="background: var(--bike)"></span>Bike</button>
+    <button class="seg-btn" data-view="run"><span class="sw" style="background: var(--run)"></span>Run</button>
+    <button class="seg-btn" data-view="all">All</button>
   </div>
-  <div class="hero-chip hero-legend glass">
-    <span><i class="sw" style="background: var(--swim)"></i>Swim/T1</span>
-    <span><i class="sw" style="background: var(--bike)"></i>Bike</span>
-    <span><i class="sw" style="background: var(--run)"></i>Run</span>
-    <span><i class="sw" style="background: var(--warn)"></i>Finish</span>
+  <div class="map-note glass">Pins are the race's official timing-mat locations (RTRT.me). Connecting lines are straight-line mat-to-mat guides, not the certified road route.</div>
+</div>
+
+<div class="infobar">
+  <span id="seg-badge" class="seg-badge">PRE-RACE</span>
+  <div class="main">
+    <div id="info-headline" class="headline">Waiting for the first chip read&hellip;</div>
+    <div id="info-sub" class="sub">Live timing checks every 60 seconds on race day.</div>
   </div>
+  <button id="zoomto" class="zoomto" disabled>Zoom to</button>
 </div>
 
 <div class="wrap">
 
-  <div class="hero-caption">IRONMAN Canada&ndash;Ottawa &middot; Full Distance &middot; Sunday, August 2, 2026 &middot; pan/zoom the map above and tap a pin for details</div>
+  <section class="card">
+    <h2>Live chip reads &mdash; Bib 1597</h2>
+    <div id="reads-empty" class="empty">No timing-mat crossings recorded yet. Rows appear here the moment the chip is read on course.</div>
+    <table class="data" id="reads-table" style="display:none">
+      <thead><tr><th>Mat</th><th>Course</th><th>Segment</th><th>Chip time</th></tr></thead>
+      <tbody id="reads-body"></tbody>
+    </table>
+  </section>
 
-  <section class="card countdown-card">
-    <div class="swim-goal-banner">🏊 Goal: in the water by <b>7:00&nbsp;AM</b>, out by <b>~9:00&nbsp;AM</b> (2h00m) &mdash; his slowest leg</div>
+  <section class="card">
     <h2>Countdown</h2>
-    <div id="countdown-status" class="countdown-status">Loading&hellip;</div>
-    <div class="countdown" id="countdown">
-      <div class="cd-unit"><div class="cd-num" id="cd-d">–</div><div class="cd-label">Days</div></div>
-      <div class="cd-unit"><div class="cd-num" id="cd-h">–</div><div class="cd-label">Hours</div></div>
-      <div class="cd-unit"><div class="cd-num" id="cd-m">–</div><div class="cd-label">Min</div></div>
-      <div class="cd-unit"><div class="cd-num" id="cd-s">–</div><div class="cd-label">Sec</div></div>
+    <div class="countdown-row">
+      <span id="cd-big" class="cd-big num">&mdash;</span>
+      <span id="cd-caption" class="cd-caption">until the target swim start</span>
     </div>
     <div class="start-time-row">
       <span>Swim start:</span>
@@ -352,249 +416,404 @@
       <input type="time" id="start-time" />
       <span id="tz-label"></span>
     </div>
-    <div class="note">Default reflects Dad's goal start of 7:00&nbsp;AM at Britannia Beach &mdash; adjust it here if his athlete guide gives a different confirmed gun time. Your choice is saved on this device.</div>
+    <div class="note">Target is a 7:00&nbsp;AM start at Britannia Beach (race window opens 6:00&nbsp;AM per the event's timing system). Adjust if the athlete guide confirms a different wave time; the choice is saved on this device.</div>
   </section>
 
   <section class="card">
-    <h2>Follow Him Live</h2>
-    <div class="track-buttons">
-      <a class="btn" target="_blank" rel="noopener" href="https://www.ironman.com/races/im-canada-ottawa">
-        <span>Official Race &amp; Athlete Tracker<br><small>ironman.com &mdash; search Bib 1597 on the Tracker tab</small></span>
+    <h2>Official tracking</h2>
+    <div class="btn-row">
+      <a class="btn primary wide" target="_blank" rel="noopener" href="https://track.rtrt.me/e/IRM-OTTAWA-2026">
+        <span>Official live tracker (web)<small>track.rtrt.me &mdash; search bib 1597</small></span>
         <span class="arrow">↗</span>
       </a>
-      <div class="btn-grid">
-        <a class="btn secondary" target="_blank" rel="noopener" href="https://apps.apple.com/app/id1183983404">
-          IRONMAN Tracker
-          <small>iOS app</small>
-        </a>
-        <a class="btn secondary" target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=me.rtrt.app.irma">
-          IRONMAN Tracker
-          <small>Android app</small>
-        </a>
-      </div>
-      <a class="btn secondary" target="_blank" rel="noopener" href="https://ottawatourism.ca/en/see-and-do/ironman">
-        Spectator &amp; Course Guide
-        <span class="arrow">↗</span>
-      </a>
+      <a class="btn" target="_blank" rel="noopener" href="https://apps.apple.com/app/id1183983404">IRONMAN Tracker<small>iOS app</small></a>
+      <a class="btn" target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=me.rtrt.app.irma">IRONMAN Tracker<small>Android app</small></a>
+      <a class="btn wide" target="_blank" rel="noopener" href="https://ottawatourism.ca/en/see-and-do/ironman">Spectator &amp; course guide<span class="arrow">↗</span></a>
     </div>
-    <div class="howto">
-      <b>Best way to follow along:</b> install the free official <b>IRONMAN Tracker</b> app (links above), search <b>Bib 1597</b>, and turn on push notifications &mdash; it'll alert you at swim exit, T1, bike splits, T2, and the finish. The web tracker on ironman.com works too but the app is more reliable on race day when cell networks get crowded near the course.
-    </div>
+    <div class="note">The official app supports push notifications per timing mat; this page polls the same public timing feed and needs no install.</div>
   </section>
 
   <section class="card">
-    <h2>Expected Splits Planner</h2>
+    <h2>Split planner</h2>
     <div class="split-form">
-      <div class="field"><label for="in-swim">Swim time (h:mm)</label><input id="in-swim" type="text" placeholder="2:00" value="2:00" /></div>
-      <div class="field"><label for="in-t1">T1 (mm:ss)</label><input id="in-t1" type="text" placeholder="8:00" value="8:00" /></div>
-      <div class="field"><label for="in-bike">Bike time (h:mm)</label><input id="in-bike" type="text" placeholder="6:30" value="6:30" /></div>
-      <div class="field"><label for="in-t2">T2 (mm:ss)</label><input id="in-t2" type="text" placeholder="6:00" value="6:00" /></div>
-      <div class="field"><label for="in-run">Run time (h:mm)</label><input id="in-run" type="text" placeholder="4:45" value="4:45" /></div>
+      <div class="field"><label for="in-swim">Swim (h:mm)</label><input id="in-swim" value="2:00" /></div>
+      <div class="field"><label for="in-t1">T1 (mm:ss)</label><input id="in-t1" value="8:00" /></div>
+      <div class="field"><label for="in-bike">Bike (h:mm)</label><input id="in-bike" value="6:30" /></div>
+      <div class="field"><label for="in-t2">T2 (mm:ss)</label><input id="in-t2" value="6:00" /></div>
+      <div class="field"><label for="in-run">Run (h:mm)</label><input id="in-run" value="4:45" /></div>
     </div>
-    <table class="splits">
-      <thead><tr><th>Checkpoint</th><th>Clock time</th><th>Elapsed</th><th>Typical cutoff</th></tr></thead>
+    <table class="data">
+      <thead><tr><th>Checkpoint</th><th>Clock</th><th>Elapsed</th><th>Typical cutoff</th></tr></thead>
       <tbody id="splits-body"></tbody>
     </table>
-    <div class="note">Enter Dad's realistic goal times to see the estimated clock time at each checkpoint &mdash; swim defaults to his 2h00m goal (his slowest leg). Cutoffs shown (2:20 swim, ~10:30 bike, 17:00 overall) are typical full-IRONMAN limits &mdash; check his athlete guide for Ottawa's official numbers.</div>
+    <div class="note">Swim defaults to the 2h00m goal (slowest leg). Cutoffs shown (2:20 swim, ~10:30 bike, 17:00 overall) are typical full-distance limits &mdash; verify against the athlete guide.</div>
   </section>
 
-  <footer>
-    Built for race day &middot; Bib 1597 &middot; IRONMAN Canada&ndash;Ottawa, Aug 2, 2026 &middot; Go Dad! 🏁
-  </footer>
+  <details class="card" id="debug-card">
+    <summary>Technical details</summary>
+    <dl class="kv">
+      <dt>Data provider</dt><dd>RTRT.me (Dilltree Inc) &mdash; official IRONMAN timing/tracking partner</dd>
+      <dt>API base</dt><dd>https://api.rtrt.me</dd>
+      <dt>Event ID</dt><dd>IRM-OTTAWA-2026</dd>
+      <dt>App ID</dt><dd id="dbg-appid">&mdash;</dd>
+      <dt>Session token</dt><dd id="dbg-token">&mdash;</dd>
+      <dt>Profile ID queried</dt><dd id="dbg-pid">&mdash;</dd>
+      <dt>Timing chip / tag</dt><dd id="dbg-tag">&mdash;</dd>
+      <dt>Last request</dt><dd id="dbg-url">&mdash;</dd>
+      <dt>Last status</dt><dd id="dbg-status">&mdash;</dd>
+      <dt>Last checked</dt><dd id="dbg-when">&mdash;</dd>
+    </dl>
+    <pre class="debug" id="dbg-response">(no response captured yet)</pre>
+    <button class="refresh" id="refresh-btn">Refresh now</button>
+    <div class="note">Name fields in the raw response are redacted before display. The token is an anonymous public-tracker session token issued by the provider's <code>/register</code> endpoint.</div>
+  </details>
+
+  <footer>Race-day dashboard &middot; Bib 1597 &middot; IRONMAN Canada&ndash;Ottawa &middot; August 2, 2026</footer>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="points-data.js"></script>
+<script src="tracker-core.js"></script>
 <script>
 (function () {
+  'use strict';
+  var Core = window.TrackerCore;
+  var POINTS = window.COURSE_POINTS;
+
+  // ---- Live timing configuration (all values are public: they are embedded
+  // in the official tracker web page / issued to anonymous clients) ----
+  var CFG = {
+    apiBase: 'https://api.rtrt.me',
+    event: 'IRM-OTTAWA-2026',
+    appid: '5824c5c948fd08c23a8b4567',
+    pid: 'R6E5S78P',      // profile ID for bib 1597 in this event
+    tag: 'ST43737',       // RFID timing chip assigned to bib 1597
+    bib: '1597',
+    pollMs: 60000,
+    timeZone: 'America/Toronto'
+  };
+
+  var segColors = {
+    swim: cssVar('--swim'), bike: cssVar('--bike'), run: cssVar('--run'),
+    transition: cssVar('--transition'), finished: cssVar('--ok'),
+    pre: cssVar('--text-dim'), unknown: cssVar('--text-dim')
+  };
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  // ================= Map =================
+  var map = L.map('course-map', { scrollWheelZoom: false, zoomControl: true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  var bounds = {
+    swim: Core.segmentBounds(POINTS, 'swim'),
+    bike: Core.segmentBounds(POINTS, 'bike'),
+    run: Core.segmentBounds(POINTS, 'run'),
+    all: Core.segmentBounds(POINTS, 'all')
+  };
+  var PAD = { paddingTopLeft: [20, 56], paddingBottomRight: [20, 40] };
+
+  // Segment polylines: connect the mats of each leg in course order.
+  function segLine(seg) {
+    return Core.segmentPoints(POINTS, seg).map(function (p) { return [p.lat, p.lng]; });
+  }
+  var lines = {
+    swim: L.polyline(segLine('swim'), { color: segColors.swim }),
+    bike: L.polyline(segLine('bike'), { color: segColors.bike }),
+    run:  L.polyline(segLine('run'),  { color: segColors.run })
+  };
+  Object.keys(lines).forEach(function (k) { lines[k].addTo(map); });
+
+  // Timing-mat markers.
+  var matMarkers = {};
+  POINTS.forEach(function (p) {
+    var color = segColors[p.segment] || segColors.transition;
+    var m = L.circleMarker([p.lat, p.lng], {
+      radius: 5, color: '#ffffff', weight: 2, fillColor: color, fillOpacity: 1
+    }).addTo(map);
+    m.bindPopup(
+      '<b>' + p.name + '</b> &middot; ' + (p.segment === 'transition' ? 'transition' : p.segment) +
+      (p.label !== p.name ? '<br>' + p.label : '') +
+      '<br>Course distance: ' + Core.formatKm(p.km) +
+      '<br><span data-mat-status="' + p.name + '">No chip read yet</span>'
+    );
+    matMarkers[p.name] = m;
+  });
+
+  // Distinct symbology for the athlete's current segment: that leg's line is
+  // solid and heavy, its mats full-size; everything else is dimmed and dashed.
+  function styleForSegment(activeSeg) {
+    Object.keys(lines).forEach(function (seg) {
+      var isActive = seg === activeSeg;
+      lines[seg].setStyle({
+        weight: isActive ? 5 : 2.5,
+        opacity: isActive ? 0.9 : 0.45,
+        dashArray: isActive ? null : '5 7'
+      });
+    });
+    POINTS.forEach(function (p) {
+      var seg = p.segment === 'transition'
+        ? (p.name === 'T1' ? 'bike' : 'run')   // group T1 with bike leg, T2 with run leg
+        : p.segment;
+      var isActive = !activeSeg || activeSeg === 'pre' || seg === activeSeg;
+      matMarkers[p.name].setStyle({
+        radius: isActive ? 6 : 4,
+        fillOpacity: isActive ? 1 : 0.4,
+        opacity: isActive ? 1 : 0.5
+      });
+    });
+  }
+  styleForSegment('pre');
+
+  var athleteMarker = null;
+  function placeAthlete(lat, lng, label) {
+    var icon = L.divIcon({
+      className: 'athlete-marker',
+      html: '<div class="ring"></div><div class="core"></div>',
+      iconSize: [16, 16], iconAnchor: [8, 8]
+    });
+    if (athleteMarker) { athleteMarker.setLatLng([lat, lng]); }
+    else { athleteMarker = L.marker([lat, lng], { icon: icon, zIndexOffset: 1000 }).addTo(map); }
+    athleteMarker.bindPopup('<b>Bib 1597</b><br>Last chip read: ' + label);
+  }
+
+  // Bookmarked views + shortcut buttons.
+  var segBtns = document.querySelectorAll('.seg-btn');
+  function goView(view) {
+    var b = bounds[view] || bounds.all;
+    map.flyToBounds(L.latLngBounds(b), PAD);
+    segBtns.forEach(function (el) { el.classList.toggle('active', el.dataset.view === view); });
+  }
+  segBtns.forEach(function (el) {
+    el.addEventListener('click', function () { goView(el.dataset.view); });
+  });
+  map.fitBounds(L.latLngBounds(bounds.all), PAD);
+
+  map.on('focus', function () { map.scrollWheelZoom.enable(); });
+  map.on('blur', function () { map.scrollWheelZoom.disable(); });
+
+  // ================= Live polling =================
+  var token = null;
+  var lastRows = [];
+  var autoViewDone = false;
+  var el = function (id) { return document.getElementById(id); };
+
+  el('dbg-appid').textContent = CFG.appid;
+  el('dbg-pid').textContent = CFG.pid + ' (bib ' + CFG.bib + ')';
+  el('dbg-tag').textContent = CFG.tag;
+
+  function setDebug(url, status, body) {
+    el('dbg-url').textContent = url;
+    el('dbg-status').textContent = status;
+    el('dbg-when').textContent = new Date().toLocaleTimeString();
+    if (body !== undefined) {
+      try {
+        el('dbg-response').textContent = JSON.stringify(Core.redactPII(body), null, 2);
+      } catch (e) {
+        el('dbg-response').textContent = String(body);
+      }
+    }
+  }
+
+  function apiGet(path, params) {
+    var qs = Object.keys(params).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    var url = CFG.apiBase + path + '?' + qs;
+    return fetch(url).then(function (res) {
+      return res.json().then(function (json) { return { url: url, status: res.status, json: json }; });
+    }).catch(function (err) {
+      return { url: url, status: 'network-error', json: { error: { type: 'fetch_failed', msg: String(err) } } };
+    });
+  }
+
+  function ensureToken() {
+    if (token) return Promise.resolve(token);
+    return apiGet('/register', { appid: CFG.appid }).then(function (r) {
+      setDebug(r.url, r.status, r.json);
+      if (r.json && r.json.token) {
+        token = r.json.token;
+        el('dbg-token').textContent = token;
+      }
+      return token;
+    });
+  }
+
+  function poll() {
+    ensureToken().then(function (t) {
+      if (!t) {
+        setInfoError('Timing API unreachable — use the official tracker link below.');
+        return;
+      }
+      return apiGet('/events/' + CFG.event + '/profiles/' + CFG.pid + '/splits', {
+        appid: CFG.appid, token: t, max: 100
+      }).then(function (r) {
+        setDebug(r.url, r.status, r.json);
+        if (r.json && r.json.error && r.json.error.type !== 'no_results') {
+          setInfoError('API error: ' + (r.json.error.msg || r.json.error.type));
+          return;
+        }
+        lastRows = Core.normalizeSplits(r.json, POINTS);
+        render();
+      });
+    });
+  }
+
+  function setInfoError(msg) {
+    el('info-headline').textContent = msg;
+    el('info-sub').textContent = 'Retrying automatically every ' + (CFG.pollMs / 1000) + 's.';
+  }
+
+  function render() {
+    var last = Core.lastMat(lastRows);
+    var seg = last ? Core.activeSegmentAfter(last.point) : 'pre';
+    var badge = el('seg-badge');
+    var names = { pre: 'PRE-RACE', swim: 'SWIM', bike: 'BIKE', run: 'RUN', transition: 'TRANSITION', finished: 'FINISHED', unknown: 'ON COURSE' };
+    badge.textContent = names[seg] || 'ON COURSE';
+    badge.style.background = segColors[seg] || segColors.unknown;
+
+    var livePill = el('live-pill');
+    var pillText = el('live-pill-text');
+    if (seg === 'finished') { livePill.classList.remove('on'); pillText.textContent = 'FINISHED'; }
+    else if (last) { livePill.classList.add('on'); pillText.textContent = 'LIVE'; }
+
+    if (!last) return;
+
+    // Info bar
+    var timeStr = Core.formatTimeValue(last.timeValue, CFG.timeZone);
+    el('info-headline').textContent =
+      'Last mat: ' + last.point + ' · ' + Core.formatKm(last.km) + ' / ' + Core.formatKm(POINTS[POINTS.length - 1].km) +
+      (last.timeValue ? ' · ' + timeStr : '');
+    var next = Core.nextPoint(POINTS, last.point);
+    el('info-sub').textContent = next
+      ? 'Next mat: ' + next.name + ' (' + Core.formatKm(next.km) + ') · ' + Core.progressPercent(POINTS, last.point) + '% of course'
+      : 'Course complete · 100%';
+
+    var zoomBtn = el('zoomto');
+    zoomBtn.disabled = false;
+    zoomBtn.onclick = function () {
+      if (last.lat !== null) map.flyTo([last.lat, last.lng], 14);
+    };
+
+    // Map symbology: in transition, highlight the leg being transitioned into.
+    var mapSeg = seg;
+    if (seg === 'transition') mapSeg = (last.point === 'SWIM') ? 'bike' : 'run';
+    if (seg === 'finished') mapSeg = 'run';
+    styleForSegment(mapSeg);
+    if (last.lat !== null) placeAthlete(last.lat, last.lng, last.point + ' · ' + timeStr);
+
+    if (!autoViewDone) {
+      autoViewDone = true;
+      var v = (seg === 'swim' || seg === 'bike' || seg === 'run') ? seg
+        : (last.point === 'SWIM' || last.point === 'T1') ? 'bike'
+        : (seg === 'finished') ? 'run' : 'all';
+      goView(v);
+    }
+
+    // Reads table
+    var body = el('reads-body');
+    body.innerHTML = '';
+    lastRows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      var segName = row.segment === 'transition' ? 'transition' : (row.segment || '?');
+      var color = segColors[row.segment] || segColors.transition;
+      tr.innerHTML =
+        '<td><span class="pill" style="background:' + color + '">' + (row.point || row.label) + '</span></td>' +
+        '<td class="num">' + Core.formatKm(row.km) + '</td>' +
+        '<td>' + segName + '</td>' +
+        '<td class="num">' + Core.formatTimeValue(row.timeValue, CFG.timeZone) + '</td>';
+      body.appendChild(tr);
+    });
+    el('reads-table').style.display = lastRows.length ? 'table' : 'none';
+    el('reads-empty').style.display = lastRows.length ? 'none' : 'block';
+  }
+
+  el('refresh-btn').addEventListener('click', poll);
+  poll();
+  setInterval(poll, CFG.pollMs);
+
+  // ================= Countdown =================
   var LS_KEY = 'im-ottawa-start-2026';
-  var dateEl = document.getElementById('start-date');
-  var timeEl = document.getElementById('start-time');
-  var tzLabel = document.getElementById('tz-label');
+  var dateEl = el('start-date'), timeEl = el('start-time');
 
   function defaultStart() {
     var saved = localStorage.getItem(LS_KEY);
     if (saved) return new Date(saved);
     return new Date('2026-08-02T07:00:00-04:00');
   }
-
   var startDate = defaultStart();
+  dateEl.value = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
+  timeEl.value = String(startDate.getHours()).padStart(2, '0') + ':' + String(startDate.getMinutes()).padStart(2, '0');
+  el('tz-label').textContent = '(' + Intl.DateTimeFormat().resolvedOptions().timeZone + ')';
 
-  function fmtDateInput(d) {
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
-  function fmtTimeInput(d) {
-    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  }
-
-  dateEl.value = fmtDateInput(startDate);
-  timeEl.value = fmtTimeInput(startDate);
-  tzLabel.textContent = '(' + Intl.DateTimeFormat().resolvedOptions().timeZone + ')';
-
-  function readStartFromInputs() {
-    var d = dateEl.value, t = timeEl.value;
-    if (!d || !t) return startDate;
-    return new Date(d + 'T' + t + ':00');
-  }
-
-  function persist() {
-    startDate = readStartFromInputs();
-    localStorage.setItem(LS_KEY, startDate.toISOString());
-    renderSplits();
-  }
-  dateEl.addEventListener('change', persist);
-  timeEl.addEventListener('change', persist);
-
-  var elD = document.getElementById('cd-d'),
-      elH = document.getElementById('cd-h'),
-      elM = document.getElementById('cd-m'),
-      elS = document.getElementById('cd-s'),
-      status = document.getElementById('countdown-status');
-
-  function tickCountdown() {
-    var now = new Date();
-    var diff = startDate - now;
-    if (diff <= 0) {
-      var since = -diff;
-      var h = Math.floor(since / 3600000);
-      status.textContent = h < 20 ? 'He’s racing! 🔥' : 'Race underway (or finished — check the tracker!)';
-      var days = Math.floor(since / 86400000);
-      var hrs = Math.floor((since % 86400000) / 3600000);
-      var mins = Math.floor((since % 3600000) / 60000);
-      var secs = Math.floor((since % 60000) / 1000);
-      elD.textContent = days; elH.textContent = hrs; elM.textContent = mins; elS.textContent = secs;
-      document.querySelectorAll('.cd-label')[0].textContent = 'Days In';
-      document.querySelectorAll('.cd-label')[1].textContent = 'Hrs In';
-    } else {
-      status.textContent = 'Until the swim start';
-      var days = Math.floor(diff / 86400000);
-      var hrs = Math.floor((diff % 86400000) / 3600000);
-      var mins = Math.floor((diff % 3600000) / 60000);
-      var secs = Math.floor((diff % 60000) / 1000);
-      elD.textContent = days; elH.textContent = hrs; elM.textContent = mins; elS.textContent = secs;
+  function persistStart() {
+    if (dateEl.value && timeEl.value) {
+      startDate = new Date(dateEl.value + 'T' + timeEl.value + ':00');
+      localStorage.setItem(LS_KEY, startDate.toISOString());
+      renderPlanner();
     }
   }
-  tickCountdown();
-  setInterval(tickCountdown, 1000);
+  dateEl.addEventListener('change', persistStart);
+  timeEl.addEventListener('change', persistStart);
 
-  // ---- Splits planner ----
-  function parseHM(str) {
-    if (!str) return 0;
-    var parts = str.split(':').map(Number);
-    if (parts.length === 2) return parts[0] * 3600 + parts[1] * 60;
-    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  function tick() {
+    var diff = startDate - new Date();
+    var abs = Math.abs(diff);
+    var h = Math.floor(abs / 3600000), m = Math.floor((abs % 3600000) / 60000), s = Math.floor((abs % 60000) / 1000);
+    var str = (h > 0 ? h + 'h ' : '') + String(m).padStart(2, '0') + 'm ' + String(s).padStart(2, '0') + 's';
+    el('cd-big').textContent = str;
+    el('cd-caption').textContent = diff > 0 ? 'until the target swim start' : 'since the target swim start';
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ================= Split planner =================
+  function parseHM(v) {
+    var p = String(v || '').split(':').map(Number);
+    if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+    if (p.length === 2) return p[0] * 3600 + p[1] * 60;
     return 0;
   }
-  function parseMS(str) {
-    if (!str) return 0;
-    var parts = str.split(':').map(Number);
-    if (parts.length === 2) return parts[0] * 60 + parts[1];
-    return Number(str) || 0;
-  }
-  function fmtClock(d) {
-    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  function parseMS(v) {
+    var p = String(v || '').split(':').map(Number);
+    if (p.length === 2) return p[0] * 60 + p[1];
+    return Number(v) || 0;
   }
   function fmtElapsed(sec) {
     var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
     return h + 'h ' + String(m).padStart(2, '0') + 'm';
   }
-
-  var ids = ['in-swim', 'in-t1', 'in-bike', 'in-t2', 'in-run'];
-  ids.forEach(function (id) {
-    document.getElementById(id).addEventListener('input', renderSplits);
+  ['in-swim', 'in-t1', 'in-bike', 'in-t2', 'in-run'].forEach(function (id) {
+    el(id).addEventListener('input', renderPlanner);
   });
-
-  function renderSplits() {
-    var swim = parseHM(document.getElementById('in-swim').value);
-    var t1 = parseMS(document.getElementById('in-t1').value);
-    var bike = parseHM(document.getElementById('in-bike').value);
-    var t2 = parseMS(document.getElementById('in-t2').value);
-    var run = parseHM(document.getElementById('in-run').value);
-
-    var cutoffs = { swim: 2 * 3600 + 20 * 60, bike: 10.5 * 3600, finish: 17 * 3600 };
-
+  function renderPlanner() {
+    var swim = parseHM(el('in-swim').value), t1 = parseMS(el('in-t1').value),
+        bike = parseHM(el('in-bike').value), t2 = parseMS(el('in-t2').value),
+        run = parseHM(el('in-run').value);
+    var cutoffs = { swim: 8400, bike: 37800, finish: 61200 };
     var rows = [
-      { name: 'Swim exit', dur: swim, cutoff: cutoffs.swim, color: 'var(--swim)' },
-      { name: 'T1 done', dur: swim + t1, cutoff: null, color: 'var(--swim)' },
-      { name: 'Bike finish', dur: swim + t1 + bike, cutoff: cutoffs.bike, color: 'var(--bike)' },
-      { name: 'T2 done', dur: swim + t1 + bike + t2, cutoff: null, color: 'var(--bike)' },
-      { name: 'FINISH', dur: swim + t1 + bike + t2 + run, cutoff: cutoffs.finish, color: 'var(--run)' }
+      { name: 'Swim exit', dur: swim, cutoff: cutoffs.swim, color: segColors.swim },
+      { name: 'T1 done', dur: swim + t1, cutoff: null, color: segColors.transition },
+      { name: 'Bike done', dur: swim + t1 + bike, cutoff: cutoffs.bike, color: segColors.bike },
+      { name: 'T2 done', dur: swim + t1 + bike + t2, cutoff: null, color: segColors.transition },
+      { name: 'FINISH', dur: swim + t1 + bike + t2 + run, cutoff: cutoffs.finish, color: segColors.run }
     ];
-
-    var body = document.getElementById('splits-body');
+    var body = el('splits-body');
     body.innerHTML = '';
     rows.forEach(function (r) {
       var clock = new Date(startDate.getTime() + r.dur * 1000);
-      var overCutoff = r.cutoff !== null && r.dur > r.cutoff;
+      var over = r.cutoff !== null && r.dur > r.cutoff;
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td><span class="pill" style="background:' + r.color + '">' + r.name + '</span></td>' +
-        '<td>' + fmtClock(clock) + '</td>' +
-        '<td>' + fmtElapsed(r.dur) + '</td>' +
-        '<td class="' + (overCutoff ? 'warn-row' : '') + '">' + (r.cutoff ? fmtElapsed(r.cutoff) + (overCutoff ? ' ⚠️' : '') : '—') + '</td>';
+        '<td class="num">' + clock.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</td>' +
+        '<td class="num">' + fmtElapsed(r.dur) + '</td>' +
+        '<td class="' + (over ? 'warn-row' : '') + ' num">' + (r.cutoff ? fmtElapsed(r.cutoff) + (over ? ' ⚠' : '') : '—') + '</td>';
       body.appendChild(tr);
     });
   }
-  renderSplits();
-})();
-</script>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-(function () {
-  if (typeof L === 'undefined') return;
-
-  var colors = {
-    swim: getComputedStyle(document.documentElement).getPropertyValue('--swim').trim(),
-    bike: getComputedStyle(document.documentElement).getPropertyValue('--bike').trim(),
-    run: getComputedStyle(document.documentElement).getPropertyValue('--run').trim(),
-    finish: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim()
-  };
-
-  var map = L.map('course-map', { scrollWheelZoom: false });
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  function pin(color, label) {
-    return L.divIcon({
-      className: '',
-      html: '<div style="background:' + color + ';width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>' +
-            (label ? '<div class="map-marker-label" style="margin-top:2px">' + label + '</div>' : ''),
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-      popupAnchor: [0, -16]
-    });
-  }
-
-  var points = [
-    { ll: [45.3612, -75.7995], color: colors.swim, name: 'Swim Start / T1', desc: '3.8 km, 2-loop swim in the Ottawa River, then transition at Britannia Beach / Britannia Park. Goal: in the water 7:00 AM, out by ~9:00 AM &mdash; his slowest leg.' },
-    { ll: [45.4280, -75.7100], color: colors.bike, name: 'Bike — Gatineau/Hull loop', desc: 'The 180 km bike course (2.75 closed-road loops) crosses into Gatineau/Hull before heading back along the river.' },
-    { ll: [45.4185, -75.6960], color: colors.bike, name: 'Bike — Rideau Canal', desc: 'Bike route runs along the Rideau Canal on Colonel By Drive near downtown.' },
-    { ll: [45.4460, -75.5990], color: colors.bike, name: 'Bike — Beacon Hill', desc: 'Eastern turnaround area of the bike loop.' },
-    { ll: [45.4247, -75.6947], color: colors.run, name: 'T2 / Run Start', desc: 'Run begins near Château Laurier on Sussex Drive.' },
-    { ll: [45.3985, -75.7025], color: colors.run, name: "Run — Dow's Lake", desc: 'Run course passes Dow’s Lake.' },
-    { ll: [45.3875, -75.7150], color: colors.run, name: 'Run — Experimental Farm', desc: 'Run course loops through the Central Experimental Farm.' },
-    { ll: [45.4236, -75.7003], color: colors.finish, name: 'FINISH — Parliament Hill', desc: 'The finish line! 🏁' }
-  ];
-
-  points.forEach(function (p) {
-    L.marker(p.ll, { icon: pin(p.color) })
-      .addTo(map)
-      .bindPopup('<b>' + p.name + '</b><br>' + p.desc);
-  });
-
-  L.polyline(points.map(function (p) { return p.ll; }), {
-    color: colors.finish,
-    weight: 2,
-    opacity: 0.55,
-    dashArray: '6 8'
-  }).addTo(map);
-
-  map.fitBounds(L.latLngBounds(points.map(function (p) { return p.ll; })), { padding: [36, 36] });
-
-  map.on('focus', function () { map.scrollWheelZoom.enable(); });
-  map.on('blur', function () { map.scrollWheelZoom.disable(); });
+  renderPlanner();
 })();
 </script>
 </body>
