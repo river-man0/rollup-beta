@@ -519,18 +519,30 @@
   };
   var PAD = { paddingTopLeft: [20, 56], paddingBottomRight: [20, 40] };
 
-  // Official course geometry from the timing provider, one polyline per leg.
+  // Course-line colors are theme-independent: the OSM basemap is always
+  // light, so the dark-theme pastel UI colors would wash out on it. These are
+  // high-saturation versions of the same hues.
+  var lineColors = { swim: '#00a35a', bike: '#1a4cff', run: '#e40428' };
+
+  // Official course geometry from the timing provider, one polyline per leg,
+  // each drawn over a white casing so it stays readable on busy map tiles.
+  var casings = {
+    swim: L.polyline(GEO.swim, { color: '#ffffff' }),
+    bike: L.polyline(GEO.bike, { color: '#ffffff' }),
+    run:  L.polyline(GEO.run,  { color: '#ffffff' })
+  };
+  Object.keys(casings).forEach(function (k) { casings[k].addTo(map); });
   var lines = {
-    swim: L.polyline(GEO.swim, { color: segColors.swim }),
-    bike: L.polyline(GEO.bike, { color: segColors.bike }),
-    run:  L.polyline(GEO.run,  { color: segColors.run })
+    swim: L.polyline(GEO.swim, { color: lineColors.swim }),
+    bike: L.polyline(GEO.bike, { color: lineColors.bike }),
+    run:  L.polyline(GEO.run,  { color: lineColors.run })
   };
   Object.keys(lines).forEach(function (k) { lines[k].addTo(map); });
 
   // Timing-mat markers.
   var matMarkers = {};
   POINTS.forEach(function (p) {
-    var color = segColors[p.segment] || segColors.transition;
+    var color = lineColors[p.segment] || segColors.transition;
     var m = L.circleMarker([p.lat, p.lng], {
       radius: 5, color: '#ffffff', weight: 2, fillColor: color, fillOpacity: 1
     }).addTo(map);
@@ -549,8 +561,12 @@
     Object.keys(lines).forEach(function (seg) {
       var isActive = seg === activeSeg;
       lines[seg].setStyle({
-        weight: isActive ? 5 : 3,
-        opacity: isActive ? 0.95 : 0.35
+        weight: isActive ? 7 : 4.5,
+        opacity: isActive ? 1 : 0.6
+      });
+      casings[seg].setStyle({
+        weight: isActive ? 10 : 7,
+        opacity: isActive ? 0.9 : 0.5
       });
     });
     POINTS.forEach(function (p) {
